@@ -1,5 +1,6 @@
 import Image from "next/image";
-import { MapPin, Sparkles, Bot, ArrowRight, Clock, Map } from "lucide-react";
+import { Sparkles, Bot, ArrowRight, Clock, Map } from "lucide-react";
+import Link from "next/link";
 
 export default function Home() {
   return (
@@ -47,11 +48,11 @@ export default function Home() {
               defaultValue={""}
             />
             <div className="p-2 pt-3">
-              <a href="./plan.html">
+              <Link href={"plan/s"}>
                 <button className="bg-slate-900 text-white p-3.5 rounded-xl hover:bg-emerald-600 transition-all duration-300 shadow-md group-focus-within:bg-emerald-600 hover:shadow-lg">
                   <ArrowRight className="w-6 h-6" />
                 </button>
-              </a>
+              </Link>
             </div>
           </div>
 
