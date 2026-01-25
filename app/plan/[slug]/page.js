@@ -1,3 +1,4 @@
+import ShareButton from "@/components/ShareButton";
 import dbConnect from "@/lib/dbConnect";
 import Plan from "@/models/Plan";
 import { notFound } from "next/navigation";
@@ -23,6 +24,19 @@ export async function generateMetadata({ params }) {
     openGraph: {
       title: plan.meta.title,
       description: plan.meta.description,
+      images: [
+        {
+          url: plan.imageUrl,
+          width: 1200,
+          height: 630,
+          alt: plan.destination,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: plan.meta.title,
+      description: plan.meta.description,
       images: [plan.imageUrl],
     },
   };
@@ -44,10 +58,7 @@ export default async function PlanPage({ params }) {
           </div>
         </Link>
         <div className="flex items-center gap-4">
-          <button className="bg-white text-emerald-950 text-sm font-medium px-5 py-2 rounded-full hover:bg-emerald-50 transition-colors flex items-center gap-2">
-            <Share2 className="w-4 h-4" />
-            Share
-          </button>
+          <ShareButton />
         </div>
       </nav>
 
