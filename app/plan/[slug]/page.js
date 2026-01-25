@@ -1,27 +1,42 @@
-import {
-  Map,
-  Share2,
-  Clock,
-  TowerControl,
-  Frame,
-  Crown,
-  Croissant,
-  Lightbulb,
-  Wallet,
-  Instagram,
-  Twitter,
-  Facebook,
-} from "lucide-react";
+import dbConnect from "@/lib/dbConnect";
+import Plan from "@/models/Plan";
+import { notFound } from "next/navigation";
+import { Map, Share2, Clock, Instagram, Twitter, Facebook } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
-export default function Plan() {
+async function getPlan(slug) {
+  await dbConnect();
+  const plan = await Plan.findOne({ slug }).lean();
+  if (!plan) {
+    notFound();
+  }
+  return plan;
+}
+
+export async function generateMetadata({ params }) {
+  const plan = await getPlan(params.slug);
+
+  return {
+    title: plan.meta.title,
+    description: plan.meta.description,
+    openGraph: {
+      title: plan.meta.title,
+      description: plan.meta.description,
+      images: [plan.imageUrl],
+    },
+  };
+}
+
+export default async function PlanPage({ params }) {
+  const plan = await getPlan(params.slug);
+
   return (
-    <>
+    <div className="relative min-h-screen bg-white">
       {/* Navbar (Overlay) */}
       <nav className="absolute top-0 left-0 right-0 z-50 w-full py-6 px-6 lg:px-12 flex justify-between items-center text-white">
         <Link href="/">
-          <div className="flex items-center gap-2 cursor-pointer">
+          <div className="flex items-center gap-2">
             <Map className="w-6 h-6" />
             <span className="text-lg font-medium tracking-tight">
               Wanderlust
@@ -38,30 +53,36 @@ export default function Plan() {
 
       {/* Hero Section */}
       <header className="relative w-full h-[85vh] min-h-[600px] overflow-hidden group">
-        {/* Background Image */}
-        <Image
-          src="https://images.unsplash.com/photo-1502602898657-3e91760cbb34?q=80&w=2679&auto=format&fit=crop"
-          alt="Paris Landscape"
-          fill
-          className="object-cover transform scale-105 group-hover:scale-100 ease-in-out duration-700"
-          priority
-        />
+        {/* Background Image with Next.js Image Component */}
+        <div className="absolute inset-0 w-full h-full transform scale-105 group-hover:scale-100 ease-in-out duration-700">
+          <Image
+            src={plan.imageUrl}
+            alt={plan.destination}
+            fill
+            className="object-cover"
+            priority
+            sizes="100vw"
+            quality={90}
+          />
+        </div>
+
         {/* Gradient Overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-emerald-950/90 via-emerald-950/20 to-black/30" />
+
         {/* Hero Content */}
-        <div className="absolute bottom-0 left-0 w-full p-8 lg:p-16 flex flex-col items-start gap-6 max-w-4xl">
+        <div className="absolute bottom-0 left-0 w-full p-8 lg:p-16 flex flex-col items-start gap-6 max-w-4xl z-10">
           <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-1.5 rounded-full text-white text-sm font-medium drop-shadow-lg">
             <Clock className="w-3.5 h-3.5" />
-            <span>4 Days</span>
+            <span>{plan.days} Days</span>
           </div>
-          <h1 className="text-5xl md:text-6xl lg:text-7xl drop-shadow-lg font-medium text-white tracking-tight leading-[1.1]">
-            Paris: The Ultimate <br />
-            <span className="text-emerald-400">City of Lights</span>
+
+          <h1 className="text-4xl md:text-5xl lg:text-6xl drop-shadow-lg font-medium text-white tracking-tight leading-[1.1]">
+            {plan.destination}:
+            <span className="text-emerald-400"> {plan.subtitle}</span>
           </h1>
-          <p className="text-lg text-gray-50 max-w-2xl drop-shadow-lg font-normal leading-relaxed">
-            Experience the romance, history, and flavor of the French capital.
-            From the heights of the Eiffel Tower to the artistic streets of
-            Montmartre.
+
+          <p className="text-sm text-gray-50 max-w-2xl drop-shadow-lg font-normal leading-relaxed">
+            {plan.description}
           </p>
         </div>
       </header>
@@ -75,119 +96,41 @@ export default function Plan() {
             </span>
             <h2 className="text-4xl lg:text-5xl font-medium text-slate-900 tracking-tight mb-6">
               Essentials for your <br />
-              Parisian Journey
+              Journey
             </h2>
             <p className="text-xl text-slate-500 leading-relaxed">
               We&apos;ve curated the must-see landmarks, crucial travel tips,
-              and culinary experiences into one seamless plan. Don&apos;t just
-              visit Paris—live it.
+              and culinary experiences into one seamless plan.
             </p>
           </div>
         </div>
 
-        {/* Grid Features (Mapped from Attractions, Tips, Food) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-16">
-          {/* Feature 1: Key Attraction */}
-          <div className="group">
-            <div className="w-12 h-12 flex items-center justify-center rounded-2xl bg-emerald-50 mb-6 group-hover:bg-emerald-100 transition-colors">
-              <TowerControl className="text-emerald-600 w-6 h-6" />
-            </div>
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-xl font-medium text-slate-900 tracking-tight">
-                Eiffel Tower
-              </h3>
-              <span className="text-xs font-semibold bg-emerald-100 text-emerald-800 px-2 py-1 rounded">
-                4.8 ★
-              </span>
-            </div>
-            <p className="text-lg text-slate-500 leading-relaxed">
-              The iron lady of Paris. Pre-book tickets to save waiting time and
-              catch the sparkling lights at the top of every hour.
-            </p>
-          </div>
+        {/* Highlights Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {plan.highlights.map((highlight, index) => (
+            <div key={index} className="group">
+              <div className="w-12 h-12 flex items-center justify-center rounded-2xl bg-emerald-50 mb-6 group-hover:bg-emerald-100 transition-colors">
+                <span className="text-emerald-600 text-lg font-bold">
+                  {highlight.icon}
+                </span>
+              </div>
 
-          {/* Feature 2: Key Attraction */}
-          <div className="group">
-            <div className="w-12 h-12 flex items-center justify-center rounded-2xl bg-orange-50 mb-6 group-hover:bg-orange-100 transition-colors">
-              <Frame className="text-orange-500 w-6 h-6" />
-            </div>
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-xl font-medium text-slate-900 tracking-tight">
-                The Louvre
-              </h3>
-              <span className="text-xs font-semibold bg-orange-100 text-orange-800 px-2 py-1 rounded">
-                4.9 ★
-              </span>
-            </div>
-            <p className="text-lg text-slate-500 leading-relaxed">
-              Home to the Mona Lisa. Expert tip: Enter through the Carrousel du
-              Louvre underground entrance to avoid the main pyramid lines.
-            </p>
-          </div>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-xl font-medium text-slate-900 tracking-tight">
+                  {highlight.title}
+                </h3>
+                {highlight.rating && (
+                  <span className="text-xs font-semibold bg-emerald-100 text-emerald-800 px-2 py-1 rounded">
+                    {highlight.rating} ★
+                  </span>
+                )}
+              </div>
 
-          {/* Feature 3: Key Attraction */}
-          <div className="group">
-            <div className="w-12 h-12 flex items-center justify-center rounded-2xl bg-blue-50 mb-6 group-hover:bg-blue-100 transition-colors">
-              <Crown className="text-blue-500 w-6 h-6" />
+              <p className="text-lg text-slate-500 leading-relaxed">
+                {highlight.description}
+              </p>
             </div>
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-xl font-medium text-slate-900 tracking-tight">
-                Versailles
-              </h3>
-              <span className="text-xs font-semibold bg-blue-100 text-blue-800 px-2 py-1 rounded">
-                4.7 ★
-              </span>
-            </div>
-            <p className="text-lg text-slate-500 leading-relaxed">
-              A royal masterpiece. Explore the Hall of Mirrors and rent a bike
-              to traverse the massive, perfectly manicured gardens.
-            </p>
-          </div>
-
-          {/* Feature 4: Food Experience */}
-          <div className="group">
-            <div className="w-12 h-12 flex items-center justify-center rounded-2xl bg-purple-50 mb-6 group-hover:bg-purple-100 transition-colors">
-              <Croissant className="text-purple-500 w-6 h-6" />
-            </div>
-            <h3 className="text-xl font-medium text-slate-900 mb-3 tracking-tight">
-              Gastronomy
-            </h3>
-            <p className="text-lg text-slate-500 leading-relaxed">
-              Must try: Duck Confit, Crème Brûlée, and Pain au Chocolat. Best
-              areas: Le Marais and Latin Quarter. Look for &apos;Formule&apos;
-              lunch menus.
-            </p>
-          </div>
-
-          {/* Feature 5: Travel Tips */}
-          <div className="group">
-            <div className="w-12 h-12 flex items-center justify-center rounded-2xl bg-yellow-50 mb-6 group-hover:bg-yellow-100 transition-colors">
-              <Lightbulb className="text-yellow-600 w-6 h-6" />
-            </div>
-            <h3 className="text-xl font-medium text-slate-900 mb-3 tracking-tight">
-              Smart Travel
-            </h3>
-            <p className="text-lg text-slate-500 leading-relaxed">
-              Buy a &apos;Paris Visite&apos; pass for Metro. Always say
-              &quot;Bonjour&quot; when entering shops. Be cautious of bracelet
-              scams near Sacré-Cœur.
-            </p>
-          </div>
-
-          {/* Feature 6: Budget */}
-          <div className="group">
-            <div className="w-12 h-12 flex items-center justify-center rounded-2xl bg-rose-50 mb-6 group-hover:bg-rose-100 transition-colors">
-              <Wallet className="text-rose-500 w-6 h-6" />
-            </div>
-            <h3 className="text-xl font-medium text-slate-900 mb-3 tracking-tight">
-              Budget Estimate
-            </h3>
-            <p className="text-lg text-slate-500 leading-relaxed">
-              <span className="font-semibold text-slate-900">€500 - €800</span>
-              per person. Covers moderate meals, transport, and entry tickets
-              (excluding flights/hotels).
-            </p>
-          </div>
+          ))}
         </div>
       </section>
 
@@ -200,249 +143,93 @@ export default function Plan() {
                 Travel Plan
               </span>
               <h2 className="text-4xl lg:text-5xl font-medium text-white tracking-tight">
-                Your 4-Day <br />
-                Parisian Itinerary
+                Your {plan.days}-Day <br />
+                Itinerary
               </h2>
             </div>
           </div>
 
-          {/* Cards Container (2x2 Grid for 4 Days) */}
+          {/* Cards Container - 2x2 Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Day 1 Card */}
-            <div className="group relative rounded-3xl overflow-hidden bg-emerald-900/50 border border-emerald-800/50 hover:border-emerald-700 transition-all duration-300">
-              <div className="aspect-[16/9] w-full overflow-hidden">
-                <Image
-                  src="https://images.unsplash.com/photo-1592680105872-50fafe39a5e1?q=80&w=2076&auto=format&fit=crop"
-                  alt="Eiffel Tower"
-                  width={800}
-                  height={450}
-                  className="w-full h-full object-cover group-hover:scale-105 duration-700 opacity-90"
-                />
-              </div>
-              <div className="p-8">
-                <h3 className="text-2xl font-medium text-white mb-4 tracking-tight">
-                  Day 01: Landmarks &amp; River
-                </h3>
-                {/* Timeline */}
-                <div className="space-y-4 mb-6">
-                  <div className="flex gap-4">
-                    <span className="text-emerald-400 font-mono text-sm w-16 pt-0.5 whitespace-nowrap">
-                      09:00 AM
-                    </span>
-                    <div>
-                      <p className="text-white text-sm font-medium">
-                        Eiffel Tower Summit
-                      </p>
-                      <p className="text-emerald-200/60 text-xs">
-                        Pre-book tickets to save 2h waiting
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex gap-4">
-                    <span className="text-emerald-400 font-mono text-sm w-16 pt-0.5 whitespace-nowrap">
-                      01:00 PM
-                    </span>
-                    <div>
-                      <p className="text-white text-sm font-medium">
-                        Lunch at Champ de Mars
-                      </p>
-                      <p className="text-emerald-200/60 text-xs">
-                        Grab a baguette &amp; cheese for a picnic
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex gap-4">
-                    <span className="text-emerald-400 font-mono text-sm w-16 pt-0.5 whitespace-nowrap">
-                      04:00 PM
-                    </span>
-                    <div>
-                      <p className="text-white text-sm font-medium">
-                        Seine River Cruise
-                      </p>
-                    </div>
-                  </div>
+            {plan.itinerary.map((day) => (
+              <div
+                key={day.day}
+                className="group relative rounded-3xl overflow-hidden bg-emerald-900/50 border border-emerald-800/50 hover:border-emerald-700 transition-all duration-300"
+              >
+                {/* Day Image with Next.js Image Component */}
+                <div className="aspect-[16/9] w-full overflow-hidden relative">
+                  <Image
+                    src={day.imageUrl || plan.imageUrl}
+                    alt={`Day ${day.day}: ${day.title}`}
+                    fill
+                    className="object-cover group-hover:scale-105 duration-700 opacity-90"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    quality={85}
+                  />
                 </div>
-              </div>
-            </div>
 
-            {/* Day 2 Card */}
-            <div className="group relative rounded-3xl overflow-hidden bg-emerald-900/50 border border-emerald-800/50 hover:border-emerald-700 transition-all duration-300">
-              <div className="aspect-[16/9] w-full overflow-hidden">
-                <Image
-                  src="https://images.unsplash.com/photo-1697397571919-714081e8684a?q=80&w=1974&auto=format&fit=crop"
-                  alt="Louvre Museum"
-                  width={800}
-                  height={450}
-                  className="w-full h-full object-cover group-hover:scale-105 duration-700 opacity-90"
-                />
-              </div>
-              <div className="p-8">
-                <h3 className="text-2xl font-medium text-white mb-4 tracking-tight">
-                  Day 02: Artistic Immersion
-                </h3>
-                <div className="space-y-4 mb-6">
-                  <div className="flex gap-4">
-                    <span className="text-emerald-400 font-mono text-sm w-16 pt-0.5 whitespace-nowrap">
-                      10:00 AM
-                    </span>
-                    <div>
-                      <p className="text-white text-sm font-medium">
-                        Louvre Museum
-                      </p>
-                      <p className="text-emerald-200/60 text-xs">
-                        Enter via Carrousel du Louvre
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex gap-4">
-                    <span className="text-emerald-400 font-mono text-sm w-16 pt-0.5 whitespace-nowrap">
-                      03:00 PM
-                    </span>
-                    <div>
-                      <p className="text-white text-sm font-medium">
-                        Tuileries Garden Walk
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex gap-4">
-                    <span className="text-emerald-400 font-mono text-sm w-16 pt-0.5 whitespace-nowrap">
-                      07:00 PM
-                    </span>
-                    <div>
-                      <p className="text-white text-sm font-medium">
-                        Dinner: Saint-Germain
-                      </p>
-                      <p className="text-emerald-200/60 text-xs">
-                        Historic literary cafes
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+                <div className="p-8">
+                  <h3 className="text-2xl font-medium text-white mb-4 tracking-tight">
+                    Day {day.day.toString().padStart(2, "0")}: {day.title}
+                  </h3>
 
-            {/* Day 3 Card */}
-            <div className="group relative rounded-3xl overflow-hidden bg-emerald-900/50 border border-emerald-800/50 hover:border-emerald-700 transition-all duration-300">
-              <div className="aspect-[16/9] w-full overflow-hidden">
-                <Image
-                  src="https://images.unsplash.com/photo-1610379957144-8809927428e4?q=80&w=1974&auto=format&fit=crop"
-                  alt="Montmartre"
-                  width={800}
-                  height={450}
-                  className="w-full h-full object-cover group-hover:scale-105 duration-700 opacity-90"
-                />
-              </div>
-              <div className="p-8">
-                <h3 className="text-2xl font-medium text-white mb-4 tracking-tight">
-                  Day 03: Bohemian Vibe
-                </h3>
-                <div className="space-y-4 mb-6">
-                  <div className="flex gap-4">
-                    <span className="text-emerald-400 font-mono text-sm w-16 pt-0.5 whitespace-nowrap">
-                      09:00 AM
-                    </span>
-                    <div>
-                      <p className="text-white text-sm font-medium">
-                        Montmartre &amp; Sacré-Cœur
-                      </p>
-                      <p className="text-emerald-200/60 text-xs">
-                        See local artists at Place du Tertre
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex gap-4">
-                    <span className="text-emerald-400 font-mono text-sm w-16 pt-0.5 whitespace-nowrap">
-                      01:00 PM
-                    </span>
-                    <div>
-                      <p className="text-white text-sm font-medium">
-                        Le Marais District
-                      </p>
-                      <p className="text-emerald-200/60 text-xs">
-                        Vintage shopping &amp; falafel
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex gap-4">
-                    <span className="text-emerald-400 font-mono text-sm w-16 pt-0.5 whitespace-nowrap">
-                      08:00 PM
-                    </span>
-                    <div>
-                      <p className="text-white text-sm font-medium">
-                        Moulin Rouge Show
-                      </p>
-                      <p className="text-emerald-200/60 text-xs">
-                        Book months in advance
-                      </p>
-                    </div>
+                  {/* Timeline */}
+                  <div className="space-y-4 mb-6">
+                    {day.activities?.map((activity, index) => (
+                      <div key={index} className="flex gap-4">
+                        <span className="text-emerald-400 font-mono text-sm w-16 pt-0.5 whitespace-nowrap">
+                          {activity.time}
+                        </span>
+                        <div>
+                          <p className="text-white text-sm font-medium">
+                            {activity.title}
+                          </p>
+                          {activity.description && (
+                            <p className="text-emerald-200/60 text-xs">
+                              {activity.description}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
-            </div>
-
-            {/* Day 4 Card */}
-            <div className="group relative rounded-3xl overflow-hidden bg-emerald-900/50 border border-emerald-800/50 hover:border-emerald-700 transition-all duration-300">
-              <div className="aspect-[16/9] w-full overflow-hidden">
-                <Image
-                  src="https://images.unsplash.com/photo-1706192878987-f893eb8cd632?q=80&w=1974&auto=format&fit=crop"
-                  alt="Versailles"
-                  width={800}
-                  height={450}
-                  className="w-full h-full object-cover group-hover:scale-105 duration-700 opacity-90"
-                />
-              </div>
-              <div className="p-8">
-                <h3 className="text-2xl font-medium text-white mb-4 tracking-tight">
-                  Day 04: Palatial Grandeur
-                </h3>
-                <div className="space-y-4 mb-6">
-                  <div className="flex gap-4">
-                    <span className="text-emerald-400 font-mono text-sm w-16 pt-0.5 whitespace-nowrap">
-                      09:00 AM
-                    </span>
-                    <div>
-                      <p className="text-white text-sm font-medium">
-                        Palace of Versailles
-                      </p>
-                      <p className="text-emerald-200/60 text-xs">
-                        RER C train from central
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex gap-4">
-                    <span className="text-emerald-400 font-mono text-sm w-16 pt-0.5 whitespace-nowrap">
-                      02:00 PM
-                    </span>
-                    <div>
-                      <p className="text-white text-sm font-medium">
-                        Gardens &amp; Grand Trianon
-                      </p>
-                      <p className="text-emerald-200/60 text-xs">
-                        Rent a bike to explore
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex gap-4">
-                    <span className="text-emerald-400 font-mono text-sm w-16 pt-0.5 whitespace-nowrap">
-                      06:00 PM
-                    </span>
-                    <div>
-                      <p className="text-white text-sm font-medium">
-                        Farewell: Latin Quarter
-                      </p>
-                      <p className="text-emerald-200/60 text-xs">
-                        Try traditional Onion Soup
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Footer */}
+      {/* Budget Section */}
+      {plan.budget && (
+        <section className="py-20 px-6 lg:px-16 max-w-7xl mx-auto">
+          <div className="bg-gradient-to-r from-emerald-50 to-blue-50 rounded-3xl p-8 lg:p-12">
+            <div className="flex items-center gap-4 mb-6">
+              <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center">
+                <span className="text-emerald-600 text-lg font-bold">💰</span>
+              </div>
+              <div>
+                <span className="text-emerald-600 font-medium tracking-wide uppercase text-xs">
+                  Budget Estimate
+                </span>
+                <h3 className="text-2xl font-medium text-slate-900">
+                  Cost Breakdown
+                </h3>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {Object.entries(plan.budget).map(([category, amount]) => (
+                <div key={category} className="bg-white rounded-xl p-6">
+                  <p className="text-slate-500 text-sm mb-2">{category}</p>
+                  <p className="text-2xl font-bold text-slate-900">{amount}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       <footer className="bg-white pt-24 pb-12 px-6 lg:px-16 border-t border-slate-100">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start gap-12">
           <div className="max-w-sm">
@@ -453,8 +240,7 @@ export default function Plan() {
               </span>
             </div>
             <p className="text-lg text-slate-500 mb-8">
-              Curating the world&apos;s best quick escapes. Plan less, live
-              more.
+              Curating the world1s best quick escapes. Plan less, live more.
             </p>
             <div className="flex gap-4">
               <Instagram className="w-6 h-6 text-slate-400 hover:text-slate-900 cursor-pointer transition-colors" />
@@ -548,6 +334,6 @@ export default function Plan() {
           <p>© 2024 Wanderlust Inc. All rights reserved.</p>
         </div>
       </footer>
-    </>
+    </div>
   );
 }
