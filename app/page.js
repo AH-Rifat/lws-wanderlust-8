@@ -5,6 +5,8 @@ import Plan from "@/models/Plan";
 import Link from "next/link";
 import { Clock, Map, Sparkles } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+
 async function getRecentPlans() {
   await dbConnect();
   const plans = await Plan.find().sort({ createdAt: -1 }).limit(3);
