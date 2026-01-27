@@ -1,36 +1,64 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Wanderlust
 
-## Getting Started
+Wanderlust is an AI-powered travel planning application. Users can describe their dream trip, and the application will generate a detailed itinerary, including logistics, hotels, and hidden gems. The application uses the Gemini API to generate travel plans and the Unsplash API to fetch destination images.
 
-First, run the development server:
+## Product Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- **AI-powered travel plan generation:** Describe your dream trip and get a detailed itinerary.
+- **View and share travel plans:** Share your generated travel plans with friends and family.
+- **Recent travel plans:** See a list of recently generated travel plans on the homepage.
+- **Responsive design:** The application is optimized for both desktop and mobile devices.
+
+## Tech Stack with Version
+
+- **Next.js:** 14.2.35
+- **React:** 18
+- **Mongoose:** 9.1.4
+- **@google/genai:** 1.38.0
+- **unsplash-js:** 7.0.20
+- **Tailwind CSS:** 3.4.1
+- **lucide-react:** 0.562.0
+
+## Running Locally
+
+1.  **Clone the repository:**
+
+    ```bash
+    git clone https://github.com/Learn-with-Sumit/batch-4-assignment-8-wanderlust-AH-Rifat.git
+    cd wanderlust
+    ```
+
+2.  **Install dependencies:**
+
+    ```bash
+    npm install
+    ```
+
+3.  **Set up environment variables:**
+    Create a `.env` file in the root of your project and add the following variables:
+
+    ```
+    GEMINI_API_KEY=your_gemini_api_key
+    UNSPLASH_ACCESS_KEY=your_unsplash_access_key
+    MONGODB_URI=your_mongodb_uri
+    ```
+
+4.  **Run the development server:**
+    ```bash
+    npm run dev
+    ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+## Component Tree Structure
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+```
+components/
+├── FacebookSDK.jsx
+├── PromptForm.jsx
+└── ShareButton.jsx
+```
 
-## Learn More
+## Live Demo Link
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+[Link to Live Demo](https://lws-wanderlust.netlify.app)
