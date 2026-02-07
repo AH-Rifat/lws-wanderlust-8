@@ -35,8 +35,10 @@ export default function PromptForm() {
     } catch (error) {
       if (error.message.includes("leaked")) {
         setError(
-          "Your API key was reported as leaked. Please use another API key",
+          "Your API key was reported as leaked. Please use another API key.",
         );
+      } else if (error.message.includes("expired")) {
+        setError("Your API key has expired. Please renew the API key.");
       } else {
         setError(error.message);
       }
