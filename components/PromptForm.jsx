@@ -23,18 +23,23 @@ export default function PromptForm() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Something went wrong");
+        throw new Error(errorData.details || "Something went wrong");
       }
 
       const data = await response.json();
-      console.log(data);
       if (data && data.plan && data.plan.slug) {
         router.push(`/plan/${data.plan.slug}`);
       } else {
         throw new Error("Failed to get plan slug from response.");
       }
     } catch (error) {
-      setError(error.message);
+      if (error.message.includes("leaked")) {
+        setError(
+          "Your API key was reported as leaked. Please use another API key",
+        );
+      } else {
+        setError(error.message);
+      }
     } finally {
       setLoading(false);
     }
